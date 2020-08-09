@@ -18,14 +18,14 @@ class ZuppyWS extends WSConfig  {
 	private static $maxreadbytes;
 	private static $readtype;
 	// Database setup
-	private static $dbhost = "34.66.202.57:3306";
-	private static $db = "zuppyDB";
-	private static $user = "zuppydb";
-	private static $pass = "Exploxi2#zuppy";
+	private static $dbhost = "127.0.0.1:3306";
+	private static $db = "testDB";
+	private static $user = "testdb";
+	private static $pass = "test#zuppy";
 	private static $conn;
 
 	/** Constructor for socket class **/
-	public function __construct($host=null, $port=null, $readtype = 0, $maxreadbytes = 65536){
+	public function __construct($host=null, $port=null, $maxreadbytes = 65536, $readtype = 0){
 		self::$maxreadbytes = $maxreadbytes;
 		self::$readtype = $readtype;
 		if($host !== null && $port !== null){
@@ -218,63 +218,6 @@ class ZuppyWS extends WSConfig  {
 		}
 	}
 	
-	/** Method to fetch all lines of messages in a variable **/
-	/** useful for large files, default iteration is 3 **/
-	public static function socket_readAll($client, $len = 65536, $flag=0, $num_loop = 1,$eof_check = true, $splitter='{eof}') {
-
-		$lines = "";
-
-		while ((($bytes = socket_recv($client, $msg, $len, $flag)) > 0) && $num_loop > 0){
-			
-			if ($bytes > 0 && $bytes !== false && !empty(self::unmask($msg))){
-				// only look for end of file line from the second loop, first loop is always assumed to be a whole file unless splitted.
-				if ($num_loop > 1){
-					$eof = ord(substr(self::unmask($msg),-1));
-					if ($eof < 33){
-						$lines .= substr(self::unmask($msg), 0, -1);
-						break;
-					}
-					else {
-						$lines .= self::unmask($msg); // continue loop
-					}
-				}
-				else {
-					$lines .= self::unmask($msg);
-					break;
-				}
-				$num_loop--;
-			}
-			else {
-				return false;
-			}
-		}
-
-		self::console_log("New bytes read at ".date('h:i a')
-			."\r\n&ensp;Total bytes received by server: ".$bytes
-			."\r\n&ensp;Bytes processed by server: ".strlen(self::unmask($msg))
-			."\r\n&ensp;New message bytes returned: ".strlen(explode($splitter, $lines)[0])."\r\n");
-
-		// use $splitter to ensure a more accurate end of file to prevent unwanted characters.
-		// if $eof_check is true then do eof checking, else return then whole message without check
-		// {eof} is not found in message, then it returns the whole message.
-		
-		if ($eof_check == true){
-			$eof = explode($splitter, $lines);
-			if (count($eof) < 2){
-				return false;
-			}
-			else {
-				return $eof[0];
-			}
-		}
-		else if ($eof_check == false) {
-			return explode($splitter, $lines)[0];
-		}
-		else {
-			return false;
-		}
-	}
-
 	/** Method to send messages to all connected clients **/
 	public static function send($clients,$sender,$msg):void {
 		foreach ($clients as $client) {
